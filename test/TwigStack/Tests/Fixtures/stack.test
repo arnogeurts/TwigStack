@@ -1,0 +1,19 @@
+--TEST--
+Test whether the twig stack works as expected
+--TEMPLATE--
+{% stackpush foo "bar1" %}
+{% stackpop foo " " %}
+After foo
+{% stackpush nonexisting "foobar" %}
+{% stackpush foo %}
+{{ foo }} foobar
+{% endstackpush %}
+{% stackpop empty %}
+At the end
+--DATA--
+return array('foo' => 'bar2')
+--EXPECT--
+
+bar1 bar2 foobar
+After foo
+At the end
