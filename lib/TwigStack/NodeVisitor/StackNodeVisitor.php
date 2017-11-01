@@ -54,7 +54,7 @@ class StackNodeVisitor implements \Twig_NodeVisitorInterface
      */
     private function handleModuleNode(\Twig_Node_Module $node)
     {
-       if ($node->hasNode('body') && null === $node->getNode('parent')) {
+       if ($node->hasNode('body') && (!$node->hasNode('parent') || null === $node->getNode('parent'))) {
            $body = $node->getNode('body');
            $node->setNode('body', new StackBodyNode($body));
        }
