@@ -54,11 +54,10 @@ class StackNodeVisitor implements \Twig_NodeVisitorInterface
      */
     private function handleModuleNode(\Twig_Node_Module $node)
     {
-        $parentNode = $node->hasNode('parent') ? $node->getNode('parent') : null;
-       if ($node->hasNode('body') && null === $parentNode) {
-           $body = $node->getNode('body');
-           $node->setNode('body', new StackBodyNode($body));
-       }
+        if ($node->hasNode('body') && !$node->hasNode('parent')) {
+            $body = $node->getNode('body');
+            $node->setNode('body', new StackBodyNode($body));
+        }
     }
 
     /**
