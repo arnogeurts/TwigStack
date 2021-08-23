@@ -10,28 +10,38 @@
 
 namespace TwigStack\Node;
 
+use Twig\Node\Node;
+use Twig;
+
 /**
  * Class StackBodyNode
  * @package TwigStack\Node
  */
-class StackBodyNode extends \Twig_Node
+class StackBodyNode extends Node
 {
     /**
-     * Consturct the stack body with the original body
-     *
-     * @param \Twig_Node $body
+     * @var Twig\Extension\ExtensionInterface
      */
-    public function __construct(\Twig_Node $body)
+    private $ext;
+
+    /**
+     * Construct the stack body with the original body
+     *
+     * @param Twig\Extension\ExtensionInterface $ext
+     * @param Node $body
+     */
+    public function __construct(Twig\Extension\ExtensionInterface $ext, Node $body)
     {
         parent::__construct(array('body' => $body));
+        $this->ext = $ext;
     }
 
     /**
      * Compiles the node to PHP.
      *
-     * @param \Twig_Compiler A Twig_Compiler instance
+     * @param Twig\Compiler $compiler A Twig_Compiler instance
      */
-    public function compile(\Twig_Compiler $compiler)
+    public function compile(Twig\Compiler $compiler)
     {
         $compiler
             ->write("ob_start();\n")
@@ -45,7 +55,6 @@ class StackBodyNode extends \Twig_Node
             ->write("throw \$e;\n")
             ->outdent()
             ->write("}\n\n")
-            ->write("echo \$this->env->getExtension('stack')->render(ob_get_clean());\n\n")
-        ;
+            ->write("echo \$this->env->getExtension(" . get_class($this->ext) . "::class)->render(ob_get_clean());\n\n");
     }
-} 
+}

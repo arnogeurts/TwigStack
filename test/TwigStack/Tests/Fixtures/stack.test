@@ -13,7 +13,6 @@ At the end
 --DATA--
 return array('foo' => 'bar2')
 --EXPECT--
-
 bar1 bar2 foobar
 After foo
 At the end

@@ -11,52 +11,66 @@
 namespace TwigStack\TokenParser;
 
 use TwigStack\Node\StackPushNode;
+use Twig;
 
 /**
  * Class StackPushTokenParser
  * @package TwigStack\TokenParser
  */
-class StackPushTokenParser extends \Twig_TokenParser
+class StackPushTokenParser extends Twig\TokenParser\AbstractTokenParser
 {
+    /**
+     * @var Twig\Extension\ExtensionInterface
+     */
+    private $ext;
+
+    public function __construct(Twig\Extension\ExtensionInterface $ext)
+    {
+        $this->ext = $ext;
+    }
     /**
      * Parses a token and returns a node.
      *
-     * @param \Twig_Token $token A Twig_Token instance
-     * @return \Twig_NodeInterface A Twig_NodeInterface instance
-     * @throws \Twig_Error_Syntax
+     * @param Twig\Token $token A Twig\Token instance
+     * @return Twig\Node\Node A Twig\Node\Node instance
+     * @throws Twig\Error\SyntaxError
      */
-    public function parse(\Twig_Token $token)
+    public function parse(Twig\Token $token)
     {
         $lineno = $token->getLine();
         $stream = $this->parser->getStream();
-        $name = $stream->expect(\Twig_Token::NAME_TYPE)->getValue();
+        $name = $stream->expect(Twig\Token::NAME_TYPE)->getValue();
         $this->parser->pushLocalScope();
 
-        if ($stream->nextIf(\Twig_Token::BLOCK_END_TYPE)) {
+        if ($stream->nextIf(Twig\Token::BLOCK_END_TYPE)) {
             $body = $this->parser->subparse(array($this, 'decideBlockEnd'), true);
-            if ($token = $stream->nextIf(\Twig_Token::NAME_TYPE)) {
+            if ($token = $stream->nextIf(Twig\Token::NAME_TYPE)) {
                 $value = $token->getValue();
 
                 if ($value != $name) {
-                    throw new \Twig_Error_Syntax(sprintf("Expected endstackpush for stack '$name', but got %s", $value), $stream->getCurrent()->getLine(), $stream->getFilename());
+                    throw
+                        new Twig\Error\SyntaxError(
+                            sprintf("Expected endstackpush for stack '$name', but got %s", $value),
+                            $stream->getCurrent()->getLine(),
+                            $stream->getSourceContext()
+                        );
                 }
             }
         } else {
-            $body = new \Twig_Node(array(
-                new \Twig_Node_Print($this->parser->getExpressionParser()->parseExpression(), $lineno),
+            $body = new Twig\Node\Node(array(
+                new Twig\Node\PrintNode($this->parser->getExpressionParser()->parseExpression(), $lineno),
             ));
         }
         $this->parser->popLocalScope();
-        $stream->expect(\Twig_Token::BLOCK_END_TYPE);
-
-        return new StackPushNode($name, $body, $lineno, $this->getTag());
+        $stream->expect(Twig\Token::BLOCK_END_TYPE);
+        return new StackPushNode($this->ext, $name, $body, $lineno, $this->getTag());
     }
 
     /**
-     * @param \Twig_Token $token
+     * @param Twig\Token $token
      * @return bool
      */
-    public function decideBlockEnd(\Twig_Token $token)
+    public function decideBlockEnd(Twig\Token $token): bool
     {
         return $token->test('endstackpush');
     }
@@ -66,7 +80,7 @@ class StackPushTokenParser extends \Twig_TokenParser
      *
      * @return string The tag name
      */
-    public function getTag()
+    public function getTag(): string
     {
         return 'stackpush';
     }

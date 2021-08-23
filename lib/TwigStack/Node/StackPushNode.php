@@ -10,31 +10,46 @@
 
 namespace TwigStack\Node;
 
+use Twig;
+use TwigStack\Extension\StackExtension;
+
 /**
  * Class StackPushNode
  * @package TwigStack\Node
  */
-class StackPushNode extends \Twig_Node
+class StackPushNode extends Twig\Node\Node
 {
+    /**
+     * @var Twig\Extension\ExtensionInterface
+     */
+    private $ext;
+
     /**
      * Construct the stack body with the original body
      *
+     * @param Twig\Extension\ExtensionInterface $ext
      * @param string $name
-     * @param \Twig_Node $body
+     * @param Twig\Node\Node $body
      * @param int $lineno
-     * @param string $tag
+     * @param string|null $tag
      */
-    public function __construct($name, \Twig_Node $body, $lineno = 0, $tag = null)
-    {
+    public function __construct(
+        Twig\Extension\ExtensionInterface $ext,
+        string $name,
+        Twig\Node\Node $body,
+        int $lineno = 0,
+        string $tag = null
+    ) {
         parent::__construct(array('body' => $body), array('name' => $name), $lineno, $tag);
+        $this->ext = $ext;
     }
 
     /**
      * Compiles the node to PHP.
      *
-     * @param \Twig_Compiler A Twig_Compiler instance
+     * @param Twig\Compiler $compiler A Twig\Compiler instance
      */
-    public function compile(\Twig_Compiler $compiler)
+    public function compile(Twig\Compiler $compiler)
     {
         $compiler
             ->write("ob_start();\n")
@@ -49,7 +64,6 @@ class StackPushNode extends \Twig_Node
             ->outdent()
             ->write("}\n\n")
             ->write("\$result = ob_get_clean();\n")
-            ->write(sprintf("\$this->env->getExtension('stack')->pushStack('%s', \$result);\n\n", $this->getAttribute('name')));
-        ;
+            ->write(sprintf("\$this->env->getExtension(" . get_class($this->ext) . "::class)->pushStack('%s', \$result);\n\n", $this->getAttribute('name')));
     }
-} 
+}

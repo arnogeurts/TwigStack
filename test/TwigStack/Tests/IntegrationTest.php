@@ -3,20 +3,21 @@
 namespace TwigStack\Tests;
 
 use TwigStack\Extension\StackExtension;
+use Twig;
 
 /**
  * Integration test for the twig stack
  *
  * @package TwigStack\Tests
  */
-class IntegrationTest extends \Twig_Test_IntegrationTestCase
+class IntegrationTest extends Twig\Test\IntegrationTestCase
 {
     /**
      * Get the extensions under test
      *
      * @return array
      */
-    public function getExtensions()
+    public function getExtensions(): array
     {
         return array(
             new StackExtension()
@@ -26,8 +27,8 @@ class IntegrationTest extends \Twig_Test_IntegrationTestCase
     /**
      * @return string
      */
-    public function getFixturesDir()
+    public function getFixturesDir(): string
     {
-        return dirname(__FILE__).'/Fixtures/';
+        return __DIR__ . '/Fixtures/';
     }
 }
