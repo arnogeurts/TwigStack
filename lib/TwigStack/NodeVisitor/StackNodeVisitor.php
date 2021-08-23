@@ -10,39 +10,42 @@
 
 namespace TwigStack\NodeVisitor;
 
+use Twig\Environment;
+use Twig\Node\Node;
 use TwigStack\Node\StackBodyNode;
+use Twig;
 
 /**
  * Class StackNodeVisitor
  * @package TwigStack\NodeVisitor
  */
-class StackNodeVisitor implements \Twig_NodeVisitorInterface
+class StackNodeVisitor extends Twig\NodeVisitor\AbstractNodeVisitor
 {
     /**
-     * Called before child nodes are visited.
-     *
-     * @param \Twig_NodeInterface $node The node to visit
-     * @param \Twig_Environment $env The Twig environment instance
-     * @return \Twig_NodeInterface The modified node
+     * @var Twig\Extension\ExtensionInterface
      */
-    public function enterNode(\Twig_NodeInterface $node, \Twig_Environment $env)
+    private $ext;
+
+    public function __construct(Twig\Extension\ExtensionInterface $ext)
+    {
+        $this->ext = $ext;
+    }
+    /**
+     * @inheritDoc
+     */
+    protected function doEnterNode(Node $node, Environment $env): Node
     {
         return $node;
     }
 
     /**
-     * Called after child nodes are visited.
-     *
-     * @param \Twig_NodeInterface $node The node to visit
-     * @param \Twig_Environment $env The Twig environment instance
-     * @return \Twig_NodeInterface|false The modified node or false if the node must be removed
+     * @inheritDoc
      */
-    public function leaveNode(\Twig_NodeInterface $node, \Twig_Environment $env)
+    protected function doLeaveNode(Node $node, Environment $env): Node
     {
-        if ($node instanceof \Twig_Node_Module) {
+        if ($node instanceof Twig\Node\ModuleNode) {
             $this->handleModuleNode($node);
         }
-
         return $node;
     }
 
@@ -50,13 +53,13 @@ class StackNodeVisitor implements \Twig_NodeVisitorInterface
      * Handle the module node
      * Add a render stash node to the end of the module body, only when the template does not have a parent
      *
-     * @param \Twig_Node_Module $node
+     * @param Twig\Node\ModuleNode $node
      */
-    private function handleModuleNode(\Twig_Node_Module $node)
+    private function handleModuleNode(Twig\Node\ModuleNode $node)
     {
         if ($node->hasNode('body') && !$node->hasNode('parent')) {
             $body = $node->getNode('body');
-            $node->setNode('body', new StackBodyNode($body));
+            $node->setNode('body', new StackBodyNode($this->ext, $body));
         }
     }
 
@@ -64,9 +67,9 @@ class StackNodeVisitor implements \Twig_NodeVisitorInterface
      * Returns the priority for this visitor.
      * Priority should be between -10 and 10 (0 is the default).
      *
-     * @return integer The priority level
+     * @return int The priority level
      */
-    public function getPriority()
+    public function getPriority(): int
     {
         return -10;
     }

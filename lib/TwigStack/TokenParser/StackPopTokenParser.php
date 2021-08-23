@@ -11,33 +11,43 @@
 namespace TwigStack\TokenParser;
 
 use TwigStack\Node\StackPopNode;
+use Twig;
 
 /**
  * Class StackPopTokenParser
  * @package TwigStack\TokenParser
  */
-class StackPopTokenParser extends \Twig_TokenParser
+class StackPopTokenParser extends Twig\TokenParser\AbstractTokenParser
 {
+    /**
+     * @var Twig\Extension\ExtensionInterface
+     */
+    private $ext;
+
+    public function __construct(Twig\Extension\ExtensionInterface $ext)
+    {
+        $this->ext = $ext;
+    }
+
     /**
      * Parses a token and returns a node.
      *
-     * @param \Twig_Token $token A Twig_Token instance
-     * @return \Twig_NodeInterface A Twig_NodeInterface instance
-     * @throws \Twig_Error_Syntax
+     * @param Twig\Token $token A Twig_Token instance
+     * @return Twig\Node\Node A Twig_NodeInterface instance
+     * @throws Twig\Error\SyntaxError
      */
-    public function parse(\Twig_Token $token)
+    public function parse(Twig\Token $token)
     {
         $lineno = $token->getLine();
         $stream = $this->parser->getStream();
-        $name = $stream->expect(\Twig_Token::NAME_TYPE)->getValue();
-        if ($stream->test(\Twig_Token::STRING_TYPE)) {
+        $name = $stream->expect(Twig\Token::NAME_TYPE)->getValue();
+        if ($stream->test(Twig\Token::STRING_TYPE)) {
             $separator = $this->parser->getExpressionParser()->parseStringExpression();
         } else {
-            $separator = new \Twig_Node_Expression_Constant('', $lineno);
+            $separator = new Twig\Node\Expression\ConstantExpression('', $lineno);
         }
-        $stream->expect(\Twig_Token::BLOCK_END_TYPE);
-
-        return new StackPopNode($name, $separator, $lineno);
+        $stream->expect(Twig\Token::BLOCK_END_TYPE);
+        return new StackPopNode($this->ext, $name, $separator, $lineno);
     }
 
     /**
@@ -45,7 +55,7 @@ class StackPopTokenParser extends \Twig_TokenParser
      *
      * @return string The tag name
      */
-    public function getTag()
+    public function getTag(): string
     {
         return 'stackpop';
     }

@@ -10,10 +10,12 @@
 
 namespace TwigStack\Extension;
 
+use Twig\NodeVisitor\NodeVisitorInterface;
 use TwigStack\NodeVisitor\StackNodeVisitor;
 use TwigStack\Stack;
 use TwigStack\TokenParser\StackPopTokenParser;
 use TwigStack\TokenParser\StackPushTokenParser;
+use Twig;
 
 /**
  * The Twig extension, which should be added to the Twig environment to enable TwigStack
@@ -21,7 +23,7 @@ use TwigStack\TokenParser\StackPushTokenParser;
  * @package TwigStack\Extension
  * @author Arno Geurts
  */
-class StackExtension extends \Twig_Extension
+class StackExtension extends Twig\Extension\AbstractExtension
 {
     /**
      * @var array|Stack[]
@@ -34,8 +36,9 @@ class StackExtension extends \Twig_Extension
      *
      * @param string $stackName
      * @param string $content
+     * @return void
      */
-    public function pushStack($stackName, $content)
+    public function pushStack(string $stackName, string $content): void
     {
         if (!array_key_exists($stackName, $this->stacks)) {
             $this->stacks[$stackName] = new Stack();
@@ -49,12 +52,12 @@ class StackExtension extends \Twig_Extension
      * @param string $output
      * @return string
      */
-    public function render($output)
+    public function render(string $output): string
     {
         $stacks = $this->stacks;
         // try to find the following string in the output
         // stack_pop_[stashName]([seperator])
-        $regex = '/stack\_pop\_([\w]*)\(([^\)]*)\)/';
+        $regex = '/stack_pop_([\w]*)\(([^)]*)\)/';
         $callback = function($matches) use ($stacks) {
             // if the requested stack does not exists, replace it with an empty string
             if (!array_key_exists($matches[1], $stacks)) {
@@ -76,23 +79,23 @@ class StackExtension extends \Twig_Extension
      *
      * @return array An array of Twig_TokenParserInterface or Twig_TokenParserBrokerInterface instances
      */
-    public function getTokenParsers()
+    public function getTokenParsers(): array
     {
         return array(
-            new StackPushTokenParser(),
-            new StackPopTokenParser()
+            new StackPushTokenParser($this),
+            new StackPopTokenParser($this)
         );
     }
 
     /**
      * Returns the node visitor instances to add to the existing list.
      *
-     * @return \Twig_NodeVisitorInterface[] An array of Twig_NodeVisitorInterface instances
+     * @return NodeVisitorInterface[] An array of Twig_NodeVisitorInterface instances
      */
-    public function getNodeVisitors()
+    public function getNodeVisitors(): array
     {
         return array(
-            new StackNodeVisitor()
+            new StackNodeVisitor($this)
         );
     }
 
@@ -101,7 +104,7 @@ class StackExtension extends \Twig_Extension
      *
      * @return string The extension name
      */
-    public function getName()
+    public function getName(): string
     {
         return 'stack';
     }

@@ -10,11 +10,13 @@
 
 namespace TwigStack;
 
+use ArrayObject;
+
 /**
  * Class Stack
  * @package TwigStack
  */
-class Stack extends \ArrayObject
+class Stack extends ArrayObject
 {
     /**
      * Separator which is used to join the stack, when cast to string
@@ -37,8 +39,9 @@ class Stack extends \ArrayObject
      * Set the separator which is used to join the stack
      *
      * @param string $separator
+     * @return void
      */
-    public function setSeparator($separator)
+    public function setSeparator(string $separator): void
     {
         $this->separator = $separator;
     }
@@ -54,4 +57,4 @@ class Stack extends \ArrayObject
     {
         return join($this->separator, $this->getArrayCopy());
     }
-} 
+}
